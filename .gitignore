@@ -11,7 +11,7 @@
 !.yarn/versions
 
 #database
-firebase.js
+src/lib/firebase.js
 
 # testing
 /coverage
