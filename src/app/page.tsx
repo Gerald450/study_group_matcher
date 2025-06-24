@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "../lib/firebase";
 import { addDoc, collection } from "firebase/firestore";
-import { log } from "console";
+
 
 export default function StudyGroupMatcher() {
   const [formData, setFormData] = useState({
