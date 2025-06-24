@@ -1,9 +1,12 @@
-'use client'
+"use client";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { db } from "../lib/firebase";
+import { addDoc, collection } from "firebase/firestore";
+import { log } from "console";
 
 export default function StudyGroupMatcher() {
   const [formData, setFormData] = useState({
@@ -21,17 +24,31 @@ export default function StudyGroupMatcher() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", formData);
-    // Add submission logic here
+    try {
+      await addDoc(collection(db, "students"), formData);
+      alert("form submitted successfully!");
+      setFormData({
+        name: "",
+        university: "",
+        courses: "",
+        availability: "",
+        studyStyle: "",
+      });
+    } catch (err) {
+      console.error("Error submitting form:", err);
+    }
+    // submission logic here
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-lg shadow-xl">
         <CardContent className="p-6 space-y-4">
-          <h1 className="text-2xl font-bold text-center">Study Group Matcher</h1>
+          <h1 className="text-2xl font-bold text-center">
+            Study Group Matcher
+          </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               name="name"
