@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "../lib/firebase";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, getDocs } from "firebase/firestore";
+import { error } from "console";
 
 
 export default function StudyGroupMatcher() {
@@ -16,6 +17,26 @@ export default function StudyGroupMatcher() {
     availability: "",
     studyStyle: "",
   });
+
+  const [students, setStudents] = useState([])
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try{
+        const snapshot = await getDocs(collection(db, "students"))
+        const studentList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setStudents(studentList);
+      }catch(err){
+        console.error('Error fetching students', err)
+
+      }
+    }
+
+    fetchStudents();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -41,6 +62,9 @@ export default function StudyGroupMatcher() {
     }
     // submission logic here
   };
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -89,6 +113,32 @@ export default function StudyGroupMatcher() {
               Find My Group
             </Button>
           </form>
+          <div className="mt-10 space-y-4">
+            <h2 className="text-xl font-smibold text-center">Current Students</h2>
+            {students.length === 0 ? (
+              <p className="text-center text-gray-500">No students submitted yet</p>
+            ) : (
+              students.map((student) => (
+                <Card key={student.id} className="bg-white">
+                  <CardContent className="p-4 space-y-1">
+                    <p className="font-medium">
+                      {student.name} - {student.university}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Courses:</span> {student.courses}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Availability:</span>{" "}{student.availability}
+                      </p>
+
+                      <p>
+                      <span className="font-semibold">Study Style:</span>{" "}{student.studyStyle}
+                      </p>
+                    </CardContent>
+                    </Card>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
