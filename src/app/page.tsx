@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "../lib/firebase";
 import { addDoc, collection, getDocs } from "firebase/firestore";
-import { error } from "console";
 
 
 export default function StudyGroupMatcher() {
@@ -30,7 +29,8 @@ export default function StudyGroupMatcher() {
         }));
         setStudents(studentList);
       }catch(err){
-        console.error('Error fetching students', err)
+        console.error('Error fetching students: ', err)
+        alert(err)
 
       }
     }
