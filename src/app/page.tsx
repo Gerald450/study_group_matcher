@@ -19,6 +19,7 @@ export default function StudyGroupMatcher() {
   });
 
   const [students, setStudents] = useState([])
+  const [showStudents, setShowStudents] = useState([])
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -114,8 +115,12 @@ export default function StudyGroupMatcher() {
             </Button>
           </form>
           <div className="mt-10 space-y-4">
-            <h2 className="text-xl font-smibold text-center">Current Students</h2>
-            {students.length === 0 ? (
+            <h2 className="text-xl font-smibold text-center cursor-pointer hover:underline"
+              onClick={()=> setShowStudents((prev) => !prev)}
+            
+            >Current Students {showStudents ? "▲" : "▼"}</h2>
+            {showStudents && (
+            students.length === 0 ? (
               <p className="text-center text-gray-500">No students submitted yet</p>
             ) : (
               students.map((student) => (
@@ -137,7 +142,7 @@ export default function StudyGroupMatcher() {
                     </CardContent>
                     </Card>
               ))
-            )}
+            ))}
           </div>
         </CardContent>
       </Card>
