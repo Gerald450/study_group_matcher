@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "../lib/firebase";
-import { addDoc, collection, getDocs } from "firebase/firestore";
-import { error } from "console";
+import { addDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
 
 
 export default function StudyGroupMatcher() {
@@ -21,23 +20,16 @@ export default function StudyGroupMatcher() {
   const [students, setStudents] = useState([])
   const [showStudents, setShowStudents] = useState([])
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try{
-        const snapshot = await getDocs(collection(db, "students"))
-        const studentList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setStudents(studentList);
-      }catch(err){
-        console.error('Error fetching students', err)
-
-      }
-    }
-
-    fetchStudents();
-  }, []);
+ useEffect(() => {
+  const unsubscribe = onSnapshot(collection(db, 'students'), (snapshot) => {
+    const studentList = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setStudents(studentList);
+  });
+  return () => unsubscribe();
+ }, []);
 
   const handleChange = (e) => {
     setFormData({
