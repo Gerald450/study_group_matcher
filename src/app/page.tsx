@@ -118,52 +118,56 @@ export default function StudyGroupMatcher() {
             {/* popover */}
 
             <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full border rounded-md px-3 py-2 text-left text-sm text-muted-foreground shadow-sm"
-                >
-                  {availabilitySummary || "Select availability"}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="w-auto p-4 space-y-4 w-[320px]  max-w-[90vw] p-4 bg-white border rounded-md shadow-xl "
-                align="start"
-                sideOffset={8}
-              >
-                <div className="bg-sky-200 py-10 px-10 h-[500px]  rounded-md flex flex-col sm:flex-col gap-4">
-                  <div>
-                    <p className="text-sm font-medium mb-1">Pick a day</p>
-                    <DayPicker
-                      selected={selectedDay}
-                      onSelect={setSelectedDay}
-                      mode="single"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">Pick time range</p>
-                    <div className="flex gap-5">
-                      <TimePicker value={startTime} onChange={setStartTime} />
-                      <span>to</span>
-                      <TimePicker value={endTime} onChange={setEndTime} />
-                    </div>
-                  </div>
+  <PopoverTrigger asChild>
+    <button
+      type="button"
+      className="w-full border rounded-md px-3 py-2 text-left text-sm text-muted-foreground shadow-sm"
+    >
+      {availabilitySummary || "Select availability"}
+    </button>
+  </PopoverTrigger>
 
-                  <button
-                    type="button"
-                    className="mt-10 text-sm underline text-blue-600"
-                    onClick={() => {
-                      if (selectedDay && startTime && endTime) {
-                        const summary = `${selectedDay.toDateString()} ${startTime}-${endTime}`;
-                        setAvailabilitySummary(summary);
-                      }
-                    }}
-                  >
-                    Confirm Selection
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
+  <PopoverContent
+    className="w-[320px] max-w-[90vw] p-4 bg-white border rounded-md shadow-xl z-50"
+    align="start"
+    side="bottom"
+    sideOffset={8}
+  >
+    <div className="bg-white px-2 py-2 rounded-md flex flex-col gap-4">
+      <div>
+        <p className="text-sm font-medium mb-1">Pick a day</p>
+        <DayPicker
+          animate
+          selected={selectedDay}
+          onSelect={setSelectedDay}
+          mode="single"
+        />
+      </div>
+
+      <div>
+        <p className="text-sm font-medium mb-1">Pick time range</p>
+        <div className="flex gap-4 items-center">
+          <TimePicker value={startTime} onChange={setStartTime} />
+          <span>to</span>
+          <TimePicker value={endTime} onChange={setEndTime} />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className="mt-2 text-sm underline text-blue-600"
+        onClick={() => {
+          if (selectedDay && startTime && endTime) {
+            const summary = `${selectedDay.toDateString()} ${startTime}-${endTime}`;
+            setAvailabilitySummary(summary);
+          }
+        }}
+      >
+        Confirm Selection
+      </button>
+    </div>
+  </PopoverContent>
+</Popover>
 
             <Textarea
               name="studyStyle"
