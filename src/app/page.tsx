@@ -8,6 +8,7 @@ import { db } from "../lib/firebase";
 import { addDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import "react-clock/dist/Clock.css";
 import TimePicker from "react-time-picker";
 import {
   Popover,
@@ -72,7 +73,7 @@ export default function StudyGroupMatcher() {
         name: "",
         university: "",
         courses: "",
-        availability:"",
+        availability: "",
         studyStyle: "",
       });
 
@@ -115,6 +116,7 @@ export default function StudyGroupMatcher() {
               required
             />
             {/* popover */}
+
             <Popover>
               <PopoverTrigger asChild>
                 <button
@@ -124,37 +126,45 @@ export default function StudyGroupMatcher() {
                   {availabilitySummary || "Select availability"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 space-y-4" align="start">
-                <div>
-                  <p className="text-sm font-medium mb-1">Pick a day</p>
-                  <DayPicker
-                    selected={selectedDay}
-                    onSelect={setSelectedDay}
-                    mode="single"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-1">Pick time range</p>
-                  <div className="flex gap-2">
-                    <TimePicker value={startTime} onChange={setStartTime} />
-                    <span>to</span>
-                    <TimePicker value={endTime} onChange={setEndTime} />
+              <PopoverContent
+                className="w-auto p-4 space-y-4 w-[320px]  max-w-[90vw] p-4 bg-white border rounded-md shadow-xl "
+                align="start"
+                sideOffset={8}
+              >
+                <div className="bg-sky-200 py-10 px-10 h-[500px]  rounded-md flex flex-col sm:flex-col gap-4">
+                  <div>
+                    <p className="text-sm font-medium mb-1">Pick a day</p>
+                    <DayPicker
+                      selected={selectedDay}
+                      onSelect={setSelectedDay}
+                      mode="single"
+                    />
                   </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">Pick time range</p>
+                    <div className="flex gap-5">
+                      <TimePicker value={startTime} onChange={setStartTime} />
+                      <span>to</span>
+                      <TimePicker value={endTime} onChange={setEndTime} />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="mt-10 text-sm underline text-blue-600"
+                    onClick={() => {
+                      if (selectedDay && startTime && endTime) {
+                        const summary = `${selectedDay.toDateString()} ${startTime}-${endTime}`;
+                        setAvailabilitySummary(summary);
+                      }
+                    }}
+                  >
+                    Confirm Selection
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="mt-2 text-sm underline text-blue-600"
-                  onClick={() => {
-                    if (selectedDay && startTime && endTime) {
-                      const summary = `${selectedDay.toDateString()} ${startTime}-${endTime}`;
-                      setAvailabilitySummary(summary);
-                    }
-                  }}
-                >
-                  Confirm Selection
-                </button>
               </PopoverContent>
             </Popover>
+
             <Textarea
               name="studyStyle"
               placeholder="Study Style (e.g., quiet, discussion-heavy)"
