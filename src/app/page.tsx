@@ -1,11 +1,14 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { db } from "../lib/firebase";
-import { addDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
+import { auth, provider, db } from "../lib/firebase";
+import { signInWithPopup } from "firebase/auth";
+import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
+import { University } from "lucide-react";
+import { error } from "console";
 
 
 export default function StudyGroupMatcher() {
@@ -20,6 +23,34 @@ export default function StudyGroupMatcher() {
   const [students, setStudents] = useState([]);
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState([]);
+
+  //authentication
+  const [user, setUser] = useState(null);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const userData = result.user;
+
+      setUser(userData);
+
+      const userRef = doc(db, 'students', userData.uid);
+      const userSnap = await getDoc(userRef)
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          name: userData.displayName || "",
+          university: "",
+          courses: "",
+          availability: "",
+          studyStyle: "",
+          email: userData.email,
+        })
+      }
+    }catch(err){
+      console.error('Error signing in: ', err)
+    }
+  }
   
 
 
@@ -43,9 +74,29 @@ export default function StudyGroupMatcher() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const currentUser = auth.currentUser;
+
+    if (!currentUser){
+      alert('Please sign in first');
+      return;
+    }
+
+    const studentData = {
+      ...formData,
+      name: currentUser.displayName || formData.name,
+      email: currentUser.email,
+    }
+
+
+
     try {
-      await addDoc(collection(db, "students"), formData);
+      await setDoc(doc(db, "students", currentUser.uid), studentData)
       alert("form submitted successfully!");
+      const matched = await matchStudents(formData);
+      setMatchedStudents(matched);
+
+
       setFormData({
         name: "",
         university: "",
@@ -61,9 +112,8 @@ export default function StudyGroupMatcher() {
     };
 
 
-    const matched = await matchStudents(formData);
-    setMatchedStudents(matched);
-    console.log(matched)
+   
+    
   };
 
   const matchStudents = async(newStudent) => {
@@ -122,7 +172,15 @@ export default function StudyGroupMatcher() {
           <h1 className="text-2xl font-bold text-center">
             Study Group Matcher
           </h1>
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+          {!user ? (
+            <div className="text-center">
+              <p className="mb-4">Please sign in to see your matches</p>
+              <Button onClick={handleGoogleSignIn}>Sign in with Google</Button>
+            </div>
+          ): (
+            <div>
+            <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               name="name"
               placeholder="Your Name"
@@ -214,6 +272,7 @@ export default function StudyGroupMatcher() {
               </div>
             </div>
           )}
+          </div>)}
         </CardContent>
       </Card>
     </div>
