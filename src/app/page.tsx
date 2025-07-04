@@ -17,8 +17,11 @@ export default function StudyGroupMatcher() {
     studyStyle: "",
   });
 
-  const [students, setStudents] = useState([])
-  const [showStudents, setShowStudents] = useState([])
+  const [students, setStudents] = useState([]);
+  const [showStudents, setShowStudents] = useState(false);
+  const [matchedStudents, setMatchedStudents] = useState([]);
+  
+
 
  useEffect(() => {
   const unsubscribe = onSnapshot(collection(db, 'students'), (snapshot) => {
@@ -53,8 +56,61 @@ export default function StudyGroupMatcher() {
     } catch (err) {
       console.error("Error submitting form:", err);
     }
-    // submission logic here
+    const newStudent = {
+      ...formData,
+    };
+
+
+    const matched = await matchStudents(formData);
+    setMatchedStudents(matched);
+    console.log(matched)
   };
+
+  const matchStudents = async(newStudent) => {
+    const studentsRef = collection(db, 'students');
+    const snapshot = await getDocs(studentsRef);
+
+    const matches = [];
+
+    const newCourses = newStudent.courses.split(",").map((a)=>a.trim().toLowerCase());
+
+    const newAvailability = newStudent.availability.split(",").map((b) => b.trim().toLowerCase());
+    
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+
+      if (
+        data.name === newStudent.name && data.university === newStudent.university
+
+      )return
+
+      const otherCourses = (data.courses || "").split(',').map((c) => c.trim().toLowerCase())
+
+      const otherAvailability = (data.availability || "").split(",").map((c) => c.trim().toLowerCase())
+      
+
+      const commonCourses = newCourses.filter((course) => 
+        otherCourses.includes(course)
+      );
+
+      if (commonCourses.length === 0) return;
+
+      const commonTimes = newAvailability.filter((slot) => 
+        otherAvailability.includes(slot)
+      );
+
+      if (commonTimes.length === 0) return
+
+      matches.push({
+        name:data.name,
+        university: data.university,
+        courses: commonCourses,
+        times:commonTimes
+      })
+    })
+  return matches;
+  }
 
 
 
@@ -90,7 +146,7 @@ export default function StudyGroupMatcher() {
             />
             <Textarea
               name="availability"
-              placeholder="Availability (e.g., Mon/Wed 3-5pm)"
+              placeholder="Availability (e.g., Mon 2-4pm, Wed 10am-12pm, Fri 1-3pm)"
               value={formData.availability}
               onChange={handleChange}
               required
@@ -136,6 +192,28 @@ export default function StudyGroupMatcher() {
               ))
             ))}
           </div>
+          {matchedStudents.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
+              <div className="space-y-4">
+                {matchedStudents.map((match, idx) => (
+                  <div 
+                    key={idx}
+                    className="border rounded-md p-4 bg-white shadow-sm space-y-2"
+                    >
+                      <p className="text-md font-medium">{match.name}</p>
+                      <p className="text-sm text-muted-foreground">{match.university}</p>
+                      <p className="text-sm">
+                        <strong>Shared Courses: </strong> {match.courses.join(",")}
+                      </p>
+                      <p className="text-sm">
+                        <strong>Shared Times: </strong>{match.times.join(",")}
+                      </p>
+                    </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
