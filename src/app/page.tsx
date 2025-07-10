@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
+import Image from "next/image";
 
 
 
@@ -22,6 +23,7 @@ export default function StudyGroupMatcher() {
   const [students, setStudents] = useState([]);
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState([]);
+
 
   //authentication
   const [user, setUser] = useState(null);
@@ -46,6 +48,7 @@ export default function StudyGroupMatcher() {
           availability: "",
           studyStyle: "",
           email: userData.email,
+          image: userData.photoURL
         })
       }
     }catch(err){
@@ -248,6 +251,16 @@ export default function StudyGroupMatcher() {
               students.map((student) => (
                 <Card key={student.id} className="bg-white">
                   <CardContent className="p-4 space-y-1">
+                    <div className="flex items-center gap-4">
+                    <img 
+                    className="rounded-md"
+                    src={student.image}
+                    alt="google photo"
+                    width={80}
+                    height={80}
+                    
+                    />
+                    <div>
                     <p className="font-medium">
                       {student.name} - {student.university}
                     </p>
@@ -261,6 +274,8 @@ export default function StudyGroupMatcher() {
                       <p>
                       <span className="font-semibold">Study Style:</span>{" "}{student.studyStyle}
                       </p>
+                      </div>
+                      </div>
                     </CardContent>
                     </Card>
               ))
