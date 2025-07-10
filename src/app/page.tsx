@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
-import { University } from "lucide-react";
-import { error } from "console";
+
 
 
 export default function StudyGroupMatcher() {
@@ -28,11 +27,13 @@ export default function StudyGroupMatcher() {
   const [user, setUser] = useState(null);
 
   const handleGoogleSignIn = async () => {
+
     try {
       const result = await signInWithPopup(auth, provider);
       const userData = result.user;
 
       setUser(userData);
+    
 
       const userRef = doc(db, 'students', userData.uid);
       const userSnap = await getDoc(userRef)
@@ -53,7 +54,7 @@ export default function StudyGroupMatcher() {
   }
   
 
-
+//real time view
  useEffect(() => {
   const unsubscribe = onSnapshot(collection(db, 'students'), (snapshot) => {
     const studentList = snapshot.docs.map((doc) => ({
@@ -65,31 +66,46 @@ export default function StudyGroupMatcher() {
   return () => unsubscribe();
  }, []);
 
-  const handleChange = (e) => {
-    setFormData({
+  const handleChange = async (e) => {
+    
+      setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+
+    
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const currentUser = auth.currentUser;
+   
 
     if (!currentUser){
       alert('Please sign in first');
       return;
     }
 
+    const docRef = doc(db, 'students', currentUser.uid);
+    const currentData = await getDoc(docRef);
+
+
+    // const studentData = {
+    //   ...formData,
+    //   name: currentUser.displayName || formData.name,
+    //   email: currentUser.email,
+    // }
+
     const studentData = {
+      ...(currentData.exists() ? currentData.data() : {}),
       ...formData,
-      name: currentUser.displayName || formData.name,
-      email: currentUser.email,
     }
 
+    await setDoc(docRef, studentData)
 
 
+    
     try {
       await setDoc(doc(db, "students", currentUser.uid), studentData)
       alert("form submitted successfully!");
@@ -107,11 +123,10 @@ export default function StudyGroupMatcher() {
     } catch (err) {
       console.error("Error submitting form:", err);
     }
+
     const newStudent = {
       ...formData,
     };
-
-
    
     
   };
@@ -130,9 +145,10 @@ export default function StudyGroupMatcher() {
     snapshot.forEach((doc) => {
       const data = doc.data();
 
+
+      //skip if same person
       if (
         data.name === newStudent.name && data.university === newStudent.university
-
       )return
 
       const otherCourses = (data.courses || "").split(',').map((c) => c.trim().toLowerCase())
