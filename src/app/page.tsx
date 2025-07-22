@@ -291,7 +291,7 @@ export default function StudyGroupMatcher() {
               ))
             ))}
           </div>
-          {matchedStudents.length > 0 && (
+          {matchedStudents.length > 0 ? (
             <div className="mt-8">
               <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
               <div className="space-y-4">
@@ -312,6 +312,8 @@ export default function StudyGroupMatcher() {
                 ))}
               </div>
             </div>
+          ) : (
+            <div>You have no matches</div>
           )}
           </div>)}
         </CardContent>
