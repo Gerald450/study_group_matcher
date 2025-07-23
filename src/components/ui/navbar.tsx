@@ -34,7 +34,7 @@ export default function Navbar() {
             <img
               src={photo}
               alt="Profile"
-              className="w-10 h-10 rounded-full object-cover border"
+              className="w-15 h-15 rounded-full object-cover border"
             />
           )}
           {username && (
