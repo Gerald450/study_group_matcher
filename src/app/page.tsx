@@ -187,7 +187,7 @@ export default function StudyGroupMatcher() {
     })
   return matches;
   }
-
+  //everything works
   //sign out
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
