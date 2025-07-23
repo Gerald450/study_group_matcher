@@ -60,6 +60,8 @@ export default function StudyGroupMatcher() {
       console.error('Error signing in: ', err)
     }
   }
+
+
   
 
 //real time view
@@ -179,7 +181,8 @@ export default function StudyGroupMatcher() {
         name:data.name,
         university: data.university,
         courses: commonCourses,
-        times:commonTimes
+        times:commonTimes,
+        image: data.image
       })
     })
   return matches;
@@ -192,6 +195,21 @@ export default function StudyGroupMatcher() {
     });
     return () => unsubscribe();
   })
+
+  //run on refresh
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) =>{
+      if (user){
+        console.log(user)
+        const userRef = doc(db, 'students', user.uid)
+        const snapshot = await getDoc(userRef)
+        const matches = await matchStudents(snapshot.data());
+        setMatchedStudents(matches)
+      }
+    });
+
+    return () => unsubscribe();
+  }, [])
 
 
 
@@ -302,16 +320,25 @@ export default function StudyGroupMatcher() {
                 {matchedStudents.map((match, idx) => (
                   <div 
                     key={idx}
-                    className="border rounded-md p-4 bg-white shadow-sm space-y-2"
+                    className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex gap-5"
                     >
-                      <p className="text-md font-medium">{match.name}</p>
+                      <img 
+                    className="rounded-md"
+                    src={match.image}
+                    alt="google photo"
+                    width={80}
+                    height={80}
+                    
+                    />
+                    <div><p className="text-md font-medium">{match.name}</p>
                       <p className="text-sm text-muted-foreground">{match.university}</p>
                       <p className="text-sm">
                         <strong>Shared Courses: </strong> {match.courses.join(",")}
                       </p>
                       <p className="text-sm">
                         <strong>Shared Times: </strong>{match.times.join(",")}
-                      </p>
+                      </p></div>
+                      
                     </div>
                 ))}
               </div>
