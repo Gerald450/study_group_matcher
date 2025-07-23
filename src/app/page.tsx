@@ -10,12 +10,12 @@ import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "fi
 import Image from "next/image";
 import Navbar from "@/components/ui/navbar";
 import { onAuthStateChanged } from "firebase/auth";
+import { match } from "assert";
 
 
 
 export default function StudyGroupMatcher() {
   const [formData, setFormData] = useState({
-    name: "",
     university: "",
     courses: "",
     availability: "",
@@ -39,6 +39,9 @@ export default function StudyGroupMatcher() {
 
       const userRef = doc(db, 'students', userData.uid);
       const userSnap = await getDoc(userRef)
+      const data = userSnap.data()
+      const matched = await matchStudents(data)
+      setMatchedStudents(matched)
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
@@ -50,6 +53,8 @@ export default function StudyGroupMatcher() {
           email: userData.email,
           image: userData.photoURL
         })
+      }else{
+        
       }
     }catch(err){
       console.error('Error signing in: ', err)
@@ -112,12 +117,11 @@ export default function StudyGroupMatcher() {
     try {
       await setDoc(doc(db, "students", currentUser.uid), studentData)
       alert("form submitted successfully!");
-      const matched = await matchStudents(formData);
+      const matched = await matchStudents(studentData);
       setMatchedStudents(matched);
 
 
       setFormData({
-        name: "",
         university: "",
         courses: "",
         availability: "",
@@ -210,13 +214,13 @@ export default function StudyGroupMatcher() {
           ): (
             <div>
             <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
+            {/* <Input
               name="name"
               placeholder="Your Name"
               value={formData.name}
               onChange={handleChange}
               required
-            />
+            /> */}
             <Input
               name="university"
               placeholder="University"
