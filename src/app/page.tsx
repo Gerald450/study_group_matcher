@@ -7,10 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
-import Image from "next/image";
 import Navbar from "@/components/ui/navbar";
 import { onAuthStateChanged } from "firebase/auth";
 import { match } from "assert";
+import ChatRoom from "@/components/ui/ChatRoom";
 
 
 
@@ -45,6 +45,7 @@ export default function StudyGroupMatcher() {
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
+          id: userData.uid,
           name: userData.displayName || "",
           university: "",
           courses: "",
@@ -53,8 +54,6 @@ export default function StudyGroupMatcher() {
           email: userData.email,
           image: userData.photoURL
         })
-      }else{
-        
       }
     }catch(err){
       console.error('Error signing in: ', err)
@@ -178,6 +177,7 @@ export default function StudyGroupMatcher() {
       if (commonTimes.length === 0) return
 
       matches.push({
+        id: data.id,
         name:data.name,
         university: data.university,
         courses: commonCourses,
@@ -200,7 +200,6 @@ export default function StudyGroupMatcher() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) =>{
       if (user){
-        console.log(user)
         const userRef = doc(db, 'students', user.uid)
         const snapshot = await getDoc(userRef)
         const matches = await matchStudents(snapshot.data());
@@ -318,8 +317,8 @@ export default function StudyGroupMatcher() {
               <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
               <div className="space-y-4">
                 {matchedStudents.map((match, idx) => (
+                  <div key={idx}>
                   <div 
-                    key={idx}
                     className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex gap-5"
                     >
                       <img 
@@ -339,7 +338,12 @@ export default function StudyGroupMatcher() {
                         <strong>Shared Times: </strong>{match.times.join(",")}
                       </p></div>
                       
-                    </div>
+                  </div>
+                  <div key ={idx}>
+                    <p className="font-semibold">{match.name}</p>
+                    <ChatRoom otherUser={{uid: match.id, name:match.name}} />
+                  </div>
+                  </div>
                 ))}
               </div>
             </div>
