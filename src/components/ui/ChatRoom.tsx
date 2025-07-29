@@ -9,13 +9,12 @@ import {
   orderBy,
   onSnapshot,
   serverTimestamp,
-  DocumentData,
 } from 'firebase/firestore';
 
 import { Input } from './input';
 import { Button } from './button';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
-// Define props for ChatRoom
 type ChatRoomProps = {
   otherUser: {
     uid: string;
@@ -23,7 +22,6 @@ type ChatRoomProps = {
   };
 };
 
-// Define a message type
 type Message = {
   id: string;
   senderId: string;
@@ -33,17 +31,25 @@ type Message = {
 };
 
 export default function ChatRoom({ otherUser }: ChatRoomProps) {
-  const currentUser = auth.currentUser;
-
-  if (!currentUser) {
-    return <p className="text-red-500">You must be signed in to use the chat.</p>;
-  }
-
-  const chatId = [currentUser.uid, otherUser.uid].sort().join('_');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const chatId =
+    currentUser && otherUser
+      ? [currentUser.uid, otherUser.uid].sort().join('_')
+      : null;
+
+  useEffect(() => {
+    if (!chatId) return;
+
     const q = query(
       collection(db, 'chat', chatId, 'messages'),
       orderBy('timestamp', 'asc')
@@ -62,8 +68,7 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !currentUser || !chatId) return;
 
     await addDoc(collection(db, 'chat', chatId, 'messages'), {
       senderId: currentUser.uid,
@@ -75,9 +80,12 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
     setNewMessage('');
   };
 
+  if (!currentUser) {
+    return <p className="text-red-500">You must be signed in to use the chat.</p>;
+  }
+
   return (
     <div className="flex flex-col h-[400px] border rounded-lg p-4 bg-white shadow-md">
-      {/* message display area */}
       <div className="flex-1 overflow-y-auto mb-2">
         {messages.map((msg) => (
           <div
