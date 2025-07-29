@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, User } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -14,10 +14,11 @@ import {
   doc,
   getDoc,
   setDoc,
+  DocumentSnapshot,
+  DocumentData,
 } from "firebase/firestore";
 import Navbar from "@/components/ui/navbar";
 import { onAuthStateChanged } from "firebase/auth";
-import { match } from "assert";
 import ChatRoom from "@/components/ui/ChatRoom";
 
 export default function StudyGroupMatcher() {
@@ -37,24 +38,39 @@ export default function StudyGroupMatcher() {
     image?: string;
   };
 
-  type Image = {
+  type Student = {
     id: string;
     name: string;
     university: string;
     courses: string;
     availability: string;
     studyStyle: string;
-    email: string;
-    image: string;
+    image?: string;
   };
 
-  const [students, setStudents] = useState<Image[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
   const [sendMessage, setSendMessage] = useState(false);
 
-  //authentication
-  const [user, setUser] = useState(null);
+  // authentication
+  const [user, setUser] = useState<User | null>(null);
+
+  // Helper to convert Firestore doc snapshot to Student
+  function docDataToStudent(doc: DocumentSnapshot<DocumentData>): Student {
+    const data = doc.data();
+    if (!data) throw new Error("No data found in document");
+
+    return {
+      id: doc.id,
+      name: data.name || "",
+      university: data.university || "",
+      courses: data.courses || "",
+      availability: data.availability || "",
+      studyStyle: data.studyStyle || "",
+      image: data.image,
+    };
+  }
 
   const handleGoogleSignIn = async () => {
     try {
@@ -63,11 +79,9 @@ export default function StudyGroupMatcher() {
 
       const userRef = doc(db, "students", userData.uid);
       const userSnap = await getDoc(userRef);
-      const data = userSnap.data();
-      const matched = await matchStudents(data);
-      setMatchedStudents(matched);
 
       if (!userSnap.exists()) {
+        // Create user doc if it doesn't exist
         await setDoc(userRef, {
           id: userData.uid,
           name: userData.displayName || "",
@@ -79,31 +93,47 @@ export default function StudyGroupMatcher() {
           image: userData.photoURL,
         });
       }
+
+      // Now fetch fresh user data and match
+      const freshSnap = await getDoc(userRef);
+      const student = docDataToStudent(freshSnap);
+      const matched = await matchStudents(student);
+      setMatchedStudents(matched);
     } catch (err) {
       console.error("Error signing in: ", err);
     }
   };
 
-  //real time view
+  // real-time view of all students
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "students"), (snapshot) => {
-      const studentList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const studentList = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || "",
+          university: data.university || "",
+          courses: data.courses || "",
+          availability: data.availability || "",
+          studyStyle: data.studyStyle || "",
+          image: data.image,
+        } as Student;
+      });
       setStudents(studentList);
     });
     return () => unsubscribe();
   }, []);
 
-  const handleChange = async (e) => {
+  const handleChange = async (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const currentUser = auth.currentUser;
@@ -116,23 +146,30 @@ export default function StudyGroupMatcher() {
     const docRef = doc(db, "students", currentUser.uid);
     const currentData = await getDoc(docRef);
 
-    // const studentData = {
-    //   ...formData,
-    //   name: currentUser.displayName || formData.name,
-    //   email: currentUser.email,
-    // }
-
     const studentData = {
       ...(currentData.exists() ? currentData.data() : {}),
       ...formData,
+      id: currentUser.uid,
+      name: currentUser.displayName || "",
+      image: currentUser.photoURL || "",
     };
 
-    await setDoc(docRef, studentData);
-
     try {
-      await setDoc(doc(db, "students", currentUser.uid), studentData);
-      alert("form submitted successfully!");
-      const matched = await matchStudents(studentData);
+      await setDoc(docRef, studentData);
+      alert("Form submitted successfully!");
+
+      // Convert to Student type safely before matching
+      const student: Student = {
+        id: studentData.id,
+        name: studentData.name,
+        university: studentData.university || "",
+        courses: studentData.courses || "",
+        availability: studentData.availability || "",
+        studyStyle: studentData.studyStyle || "",
+        image: studentData.image,
+      };
+
+      const matched = await matchStudents(student);
       setMatchedStudents(matched);
 
       setFormData({
@@ -144,17 +181,13 @@ export default function StudyGroupMatcher() {
     } catch (err) {
       console.error("Error submitting form:", err);
     }
-
-    const newStudent = {
-      ...formData,
-    };
   };
 
-  const matchStudents = async (newStudent) => {
+  const matchStudents = async (newStudent: Student): Promise<Match[]> => {
     const studentsRef = collection(db, "students");
     const snapshot = await getDocs(studentsRef);
 
-    const matches = [];
+    const matches: Match[] = [];
 
     const newCourses = newStudent.courses
       .split(",")
@@ -167,20 +200,16 @@ export default function StudyGroupMatcher() {
     snapshot.forEach((doc) => {
       const data = doc.data();
 
-      //skip if same person
-      if (
-        data.name === newStudent.name &&
-        data.university === newStudent.university
-      )
-        return;
+      // skip if same person
+      if (data.id === newStudent.id) return;
 
       const otherCourses = (data.courses || "")
         .split(",")
-        .map((c) => c.trim().toLowerCase());
+        .map((c: string) => c.trim().toLowerCase());
 
       const otherAvailability = (data.availability || "")
         .split(",")
-        .map((c) => c.trim().toLowerCase());
+        .map((c: string) => c.trim().toLowerCase());
 
       const commonCourses = newCourses.filter((course) =>
         otherCourses.includes(course)
@@ -205,22 +234,24 @@ export default function StudyGroupMatcher() {
     });
     return matches;
   };
-  //everything works
-  //sign out
+
+  // listen for auth changes and update user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
     return () => unsubscribe();
-  });
+  }, []);
 
-  //run on refresh
+  // on refresh, load matches for current user safely
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userRef = doc(db, "students", user.uid);
         const snapshot = await getDoc(userRef);
-        const matches = await matchStudents(snapshot.data());
+        if (!snapshot.exists()) return;
+        const student = docDataToStudent(snapshot);
+        const matches = await matchStudents(student);
         setMatchedStudents(matches);
       }
     });
@@ -234,27 +265,16 @@ export default function StudyGroupMatcher() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-lg shadow-xl">
           <CardContent className="p-6 space-y-4">
-            <h1 className="text-2xl font-bold text-center">
-              Study Group Matcher
-            </h1>
+            <h1 className="text-2xl font-bold text-center">Study Group Matcher</h1>
 
             {!user ? (
               <div className="text-center">
                 <p className="mb-4">Please sign in to see your matches</p>
-                <Button onClick={handleGoogleSignIn}>
-                  Sign in with Google
-                </Button>
+                <Button onClick={handleGoogleSignIn}>Sign in with Google</Button>
               </div>
             ) : (
               <div>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* <Input
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            /> */}
                   <Input
                     name="university"
                     placeholder="University"
@@ -287,18 +307,17 @@ export default function StudyGroupMatcher() {
                     Find My Group
                   </Button>
                 </form>
+
                 <div className="mt-10 space-y-4">
                   <h2
-                    className="text-xl font-smibold text-center cursor-pointer hover:underline"
+                    className="text-xl font-semibold text-center cursor-pointer hover:underline"
                     onClick={() => setShowStudents((prev) => !prev)}
                   >
                     Current Students {showStudents ? "▲" : "▼"}
                   </h2>
                   {showStudents &&
                     (students.length === 0 ? (
-                      <p className="text-center text-gray-500">
-                        No students submitted yet
-                      </p>
+                      <p className="text-center text-gray-500">No students submitted yet</p>
                     ) : (
                       students.map((student) => (
                         <Card key={student.id} className="bg-white">
@@ -316,23 +335,13 @@ export default function StudyGroupMatcher() {
                                   {student.name} - {student.university}
                                 </p>
                                 <p>
-                                  <span className="font-semibold">
-                                    Courses:
-                                  </span>{" "}
-                                  {student.courses}
+                                  <span className="font-semibold">Courses:</span> {student.courses}
                                 </p>
                                 <p>
-                                  <span className="font-semibold">
-                                    Availability:
-                                  </span>{" "}
-                                  {student.availability}
+                                  <span className="font-semibold">Availability:</span> {student.availability}
                                 </p>
-
                                 <p>
-                                  <span className="font-semibold">
-                                    Study Style:
-                                  </span>{" "}
-                                  {student.studyStyle}
+                                  <span className="font-semibold">Study Style:</span> {student.studyStyle}
                                 </p>
                               </div>
                             </div>
@@ -341,12 +350,13 @@ export default function StudyGroupMatcher() {
                       ))
                     ))}
                 </div>
+
                 {matchedStudents.length > 0 ? (
                   <div className="mt-8">
                     <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
                     <div className="space-y-4">
                       {matchedStudents.map((match, idx) => (
-                        <div key={idx}>
+                        <div key={match.id}>
                           <div className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex justify-between gap-5 relative">
                             <img
                               className="rounded-md"
@@ -357,37 +367,27 @@ export default function StudyGroupMatcher() {
                             />
 
                             <div className="flex-1">
-                              <p className="text-md font-medium">
-                                {match.name}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {match.university}
+                              <p className="text-md font-medium">{match.name}</p>
+                              <p className="text-sm text-muted-foreground">{match.university}</p>
+                              <p className="text-sm">
+                                <strong>Shared Courses: </strong> {match.courses.join(", ")}
                               </p>
                               <p className="text-sm">
-                                <strong>Shared Courses: </strong>{" "}
-                                {match.courses.join(",")}
-                              </p>
-                              <p className="text-sm">
-                                <strong>Shared Times: </strong>{" "}
-                                {match.times.join(",")}
+                                <strong>Shared Times: </strong> {match.times.join(", ")}
                               </p>
                             </div>
 
                             <div className="absolute bottom-4 right-4">
-                              <Button
-                                onClick={() => setSendMessage((prev) => !prev)}
-                              >
+                              <Button onClick={() => setSendMessage((prev) => !prev)}>
                                 Text {match.name}
                               </Button>
                             </div>
                           </div>
 
                           {sendMessage && (
-                            <div key={idx}>
+                            <div>
                               <p className="font-semibold">{match.name}</p>
-                              <ChatRoom
-                                otherUser={{ uid: match.id, name: match.name }}
-                              />
+                              <ChatRoom otherUser={{ uid: match.id, name: match.name }} />
                             </div>
                           )}
                         </div>
