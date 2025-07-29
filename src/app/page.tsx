@@ -28,9 +28,29 @@ export default function StudyGroupMatcher() {
     studyStyle: "",
   });
 
-  const [students, setStudents] = useState([]);
+  type Match = {
+    id: string;
+    name: string;
+    university: string;
+    courses: string[];
+    times: string[];
+    image?: string;
+  };
+
+  type Image = {
+    id: string;
+    name: string;
+    university: string;
+    courses: string;
+    availability: string;
+    studyStyle: string;
+    email: string;
+    image: string;
+  };
+
+  const [students, setStudents] = useState<Image[]>([]);
   const [showStudents, setShowStudents] = useState(false);
-  const [matchedStudents, setMatchedStudents] = useState([]);
+  const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
   const [sendMessage, setSendMessage] = useState(false);
 
   //authentication
@@ -328,7 +348,6 @@ export default function StudyGroupMatcher() {
                       {matchedStudents.map((match, idx) => (
                         <div key={idx}>
                           <div className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex justify-between gap-5 relative">
-                           
                             <img
                               className="rounded-md"
                               src={match.image}
@@ -337,7 +356,6 @@ export default function StudyGroupMatcher() {
                               height={80}
                             />
 
-                          
                             <div className="flex-1">
                               <p className="text-md font-medium">
                                 {match.name}
@@ -355,7 +373,6 @@ export default function StudyGroupMatcher() {
                               </p>
                             </div>
 
-                      
                             <div className="absolute bottom-4 right-4">
                               <Button
                                 onClick={() => setSendMessage((prev) => !prev)}
