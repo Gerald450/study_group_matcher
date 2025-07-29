@@ -6,13 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup } from "firebase/auth";
-import { addDoc, collection, getDocs, onSnapshot, doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  onSnapshot,
+  doc,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 import Navbar from "@/components/ui/navbar";
 import { onAuthStateChanged } from "firebase/auth";
 import { match } from "assert";
 import ChatRoom from "@/components/ui/ChatRoom";
-
-
 
 export default function StudyGroupMatcher() {
   const [formData, setFormData] = useState({
@@ -25,23 +31,21 @@ export default function StudyGroupMatcher() {
   const [students, setStudents] = useState([]);
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState([]);
-
+  const [sendMessage, setSendMessage] = useState(false);
 
   //authentication
   const [user, setUser] = useState(null);
 
   const handleGoogleSignIn = async () => {
-
     try {
       const result = await signInWithPopup(auth, provider);
       const userData = result.user;
-    
 
-      const userRef = doc(db, 'students', userData.uid);
-      const userSnap = await getDoc(userRef)
-      const data = userSnap.data()
-      const matched = await matchStudents(data)
-      setMatchedStudents(matched)
+      const userRef = doc(db, "students", userData.uid);
+      const userSnap = await getDoc(userRef);
+      const data = userSnap.data();
+      const matched = await matchStudents(data);
+      setMatchedStudents(matched);
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
@@ -52,53 +56,45 @@ export default function StudyGroupMatcher() {
           availability: "",
           studyStyle: "",
           email: userData.email,
-          image: userData.photoURL
-        })
+          image: userData.photoURL,
+        });
       }
-    }catch(err){
-      console.error('Error signing in: ', err)
+    } catch (err) {
+      console.error("Error signing in: ", err);
     }
-  }
+  };
 
-
-  
-
-//real time view
- useEffect(() => {
-  const unsubscribe = onSnapshot(collection(db, 'students'), (snapshot) => {
-    const studentList = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setStudents(studentList);
-  });
-  return () => unsubscribe();
- }, []);
+  //real time view
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "students"), (snapshot) => {
+      const studentList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setStudents(studentList);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleChange = async (e) => {
-    
-      setFormData({
+    setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-
-    
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const currentUser = auth.currentUser;
-   
 
-    if (!currentUser){
-      alert('Please sign in first');
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      alert("Please sign in first");
       return;
     }
 
-    const docRef = doc(db, 'students', currentUser.uid);
+    const docRef = doc(db, "students", currentUser.uid);
     const currentData = await getDoc(docRef);
-
 
     // const studentData = {
     //   ...formData,
@@ -109,18 +105,15 @@ export default function StudyGroupMatcher() {
     const studentData = {
       ...(currentData.exists() ? currentData.data() : {}),
       ...formData,
-    }
+    };
 
-    await setDoc(docRef, studentData)
+    await setDoc(docRef, studentData);
 
-
-    
     try {
-      await setDoc(doc(db, "students", currentUser.uid), studentData)
+      await setDoc(doc(db, "students", currentUser.uid), studentData);
       alert("form submitted successfully!");
       const matched = await matchStudents(studentData);
       setMatchedStudents(matched);
-
 
       setFormData({
         university: "",
@@ -135,58 +128,63 @@ export default function StudyGroupMatcher() {
     const newStudent = {
       ...formData,
     };
-   
-    
   };
 
-  const matchStudents = async(newStudent) => {
-    const studentsRef = collection(db, 'students');
+  const matchStudents = async (newStudent) => {
+    const studentsRef = collection(db, "students");
     const snapshot = await getDocs(studentsRef);
 
     const matches = [];
 
-    const newCourses = newStudent.courses.split(",").map((a)=>a.trim().toLowerCase());
+    const newCourses = newStudent.courses
+      .split(",")
+      .map((a) => a.trim().toLowerCase());
 
-    const newAvailability = newStudent.availability.split(",").map((b) => b.trim().toLowerCase());
-    
+    const newAvailability = newStudent.availability
+      .split(",")
+      .map((b) => b.trim().toLowerCase());
 
     snapshot.forEach((doc) => {
       const data = doc.data();
 
-
       //skip if same person
       if (
-        data.name === newStudent.name && data.university === newStudent.university
-      )return
+        data.name === newStudent.name &&
+        data.university === newStudent.university
+      )
+        return;
 
-      const otherCourses = (data.courses || "").split(',').map((c) => c.trim().toLowerCase())
+      const otherCourses = (data.courses || "")
+        .split(",")
+        .map((c) => c.trim().toLowerCase());
 
-      const otherAvailability = (data.availability || "").split(",").map((c) => c.trim().toLowerCase())
-      
+      const otherAvailability = (data.availability || "")
+        .split(",")
+        .map((c) => c.trim().toLowerCase());
 
-      const commonCourses = newCourses.filter((course) => 
+      const commonCourses = newCourses.filter((course) =>
         otherCourses.includes(course)
       );
 
       if (commonCourses.length === 0) return;
 
-      const commonTimes = newAvailability.filter((slot) => 
+      const commonTimes = newAvailability.filter((slot) =>
         otherAvailability.includes(slot)
       );
 
-      if (commonTimes.length === 0) return
+      if (commonTimes.length === 0) return;
 
       matches.push({
         id: data.id,
-        name:data.name,
+        name: data.name,
         university: data.university,
         courses: commonCourses,
-        times:commonTimes,
-        image: data.image
-      })
-    })
-  return matches;
-  }
+        times: commonTimes,
+        image: data.image,
+      });
+    });
+    return matches;
+  };
   //everything works
   //sign out
   useEffect(() => {
@@ -194,166 +192,199 @@ export default function StudyGroupMatcher() {
       setUser(user);
     });
     return () => unsubscribe();
-  })
+  });
 
   //run on refresh
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) =>{
-      if (user){
-        const userRef = doc(db, 'students', user.uid)
-        const snapshot = await getDoc(userRef)
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userRef = doc(db, "students", user.uid);
+        const snapshot = await getDoc(userRef);
         const matches = await matchStudents(snapshot.data());
-        setMatchedStudents(matches)
+        setMatchedStudents(matches);
       }
     });
 
     return () => unsubscribe();
-  }, [])
-
-
-
+  }, []);
 
   return (
-    <> 
-    {user && <Navbar/>}
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg shadow-xl">
-        <CardContent className="p-6 space-y-4">
-          <h1 className="text-2xl font-bold text-center">
-            Study Group Matcher
-          </h1>
+    <>
+      {user && <Navbar />}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg shadow-xl">
+          <CardContent className="p-6 space-y-4">
+            <h1 className="text-2xl font-bold text-center">
+              Study Group Matcher
+            </h1>
 
-          {!user ? (
-            <div className="text-center">
-              <p className="mb-4">Please sign in to see your matches</p>
-              <Button onClick={handleGoogleSignIn}>Sign in with Google</Button>
-            </div>
-          ): (
-            <div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-            {/* <Input
+            {!user ? (
+              <div className="text-center">
+                <p className="mb-4">Please sign in to see your matches</p>
+                <Button onClick={handleGoogleSignIn}>
+                  Sign in with Google
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* <Input
               name="name"
               placeholder="Your Name"
               value={formData.name}
               onChange={handleChange}
               required
             /> */}
-            <Input
-              name="university"
-              placeholder="University"
-              value={formData.university}
-              onChange={handleChange}
-              required
-            />
-            <Textarea
-              name="courses"
-              placeholder="Courses (e.g., Calculus I, CS2301)"
-              value={formData.courses}
-              onChange={handleChange}
-              required
-            />
-            <Textarea
-              name="availability"
-              placeholder="Availability (e.g., Mon 2-4pm, Wed 10am-12pm, Fri 1-3pm)"
-              value={formData.availability}
-              onChange={handleChange}
-              required
-            />
-            <Textarea
-              name="studyStyle"
-              placeholder="Study Style (e.g., quiet, discussion-heavy)"
-              value={formData.studyStyle}
-              onChange={handleChange}
-              required
-            />
-            <Button type="submit" className="w-full">
-              Find My Group
-            </Button>
-          </form>
-          <div className="mt-10 space-y-4">
-            <h2 className="text-xl font-smibold text-center cursor-pointer hover:underline"
-              onClick={()=> setShowStudents((prev) => !prev)}
-            
-            >Current Students {showStudents ? "▲" : "▼"}</h2>
-            {showStudents && (
-            students.length === 0 ? (
-              <p className="text-center text-gray-500">No students submitted yet</p>
-            ) : (
-              students.map((student) => (
-                <Card key={student.id} className="bg-white">
-                  <CardContent className="p-4 space-y-1">
-                    <div className="flex items-center gap-4">
-                    <img 
-                    className="rounded-md"
-                    src={student.image}
-                    alt="google photo"
-                    width={80}
-                    height={80}
-                    
-                    />
-                    <div>
-                    <p className="font-medium">
-                      {student.name} - {student.university}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Courses:</span> {student.courses}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Availability:</span>{" "}{student.availability}
+                  <Input
+                    name="university"
+                    placeholder="University"
+                    value={formData.university}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Textarea
+                    name="courses"
+                    placeholder="Courses (e.g., Calculus I, CS2301)"
+                    value={formData.courses}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Textarea
+                    name="availability"
+                    placeholder="Availability (e.g., Mon 2-4pm, Wed 10am-12pm, Fri 1-3pm)"
+                    value={formData.availability}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Textarea
+                    name="studyStyle"
+                    placeholder="Study Style (e.g., quiet, discussion-heavy)"
+                    value={formData.studyStyle}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Button type="submit" className="w-full">
+                    Find My Group
+                  </Button>
+                </form>
+                <div className="mt-10 space-y-4">
+                  <h2
+                    className="text-xl font-smibold text-center cursor-pointer hover:underline"
+                    onClick={() => setShowStudents((prev) => !prev)}
+                  >
+                    Current Students {showStudents ? "▲" : "▼"}
+                  </h2>
+                  {showStudents &&
+                    (students.length === 0 ? (
+                      <p className="text-center text-gray-500">
+                        No students submitted yet
                       </p>
+                    ) : (
+                      students.map((student) => (
+                        <Card key={student.id} className="bg-white">
+                          <CardContent className="p-4 space-y-1">
+                            <div className="flex items-center gap-4">
+                              <img
+                                className="rounded-md"
+                                src={student.image}
+                                alt="google photo"
+                                width={80}
+                                height={80}
+                              />
+                              <div>
+                                <p className="font-medium">
+                                  {student.name} - {student.university}
+                                </p>
+                                <p>
+                                  <span className="font-semibold">
+                                    Courses:
+                                  </span>{" "}
+                                  {student.courses}
+                                </p>
+                                <p>
+                                  <span className="font-semibold">
+                                    Availability:
+                                  </span>{" "}
+                                  {student.availability}
+                                </p>
 
-                      <p>
-                      <span className="font-semibold">Study Style:</span>{" "}{student.studyStyle}
-                      </p>
-                      </div>
-                      </div>
-                    </CardContent>
-                    </Card>
-              ))
-            ))}
-          </div>
-          {matchedStudents.length > 0 ? (
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
-              <div className="space-y-4">
-                {matchedStudents.map((match, idx) => (
-                  <div key={idx}>
-                  <div 
-                    className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex gap-5"
-                    >
-                      <img 
-                    className="rounded-md"
-                    src={match.image}
-                    alt="google photo"
-                    width={80}
-                    height={80}
-                    
-                    />
-                    <div><p className="text-md font-medium">{match.name}</p>
-                      <p className="text-sm text-muted-foreground">{match.university}</p>
-                      <p className="text-sm">
-                        <strong>Shared Courses: </strong> {match.courses.join(",")}
-                      </p>
-                      <p className="text-sm">
-                        <strong>Shared Times: </strong>{match.times.join(",")}
-                      </p></div>
+                                <p>
+                                  <span className="font-semibold">
+                                    Study Style:
+                                  </span>{" "}
+                                  {student.studyStyle}
+                                </p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ))}
+                </div>
+                {matchedStudents.length > 0 ? (
+                  <div className="mt-8">
+                    <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
+                    <div className="space-y-4">
+                      {matchedStudents.map((match, idx) => (
+                        <div key={idx}>
+                          <div className="border rounded-md p-4 bg-white shadow-sm space-y-2 flex justify-between gap-5 relative">
+                           
+                            <img
+                              className="rounded-md"
+                              src={match.image}
+                              alt="google photo"
+                              width={80}
+                              height={80}
+                            />
+
+                          
+                            <div className="flex-1">
+                              <p className="text-md font-medium">
+                                {match.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {match.university}
+                              </p>
+                              <p className="text-sm">
+                                <strong>Shared Courses: </strong>{" "}
+                                {match.courses.join(",")}
+                              </p>
+                              <p className="text-sm">
+                                <strong>Shared Times: </strong>{" "}
+                                {match.times.join(",")}
+                              </p>
+                            </div>
+
                       
+                            <div className="absolute bottom-4 right-4">
+                              <Button
+                                onClick={() => setSendMessage((prev) => !prev)}
+                              >
+                                Text {match.name}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {sendMessage && (
+                            <div key={idx}>
+                              <p className="font-semibold">{match.name}</p>
+                              <ChatRoom
+                                otherUser={{ uid: match.id, name: match.name }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div key ={idx}>
-                    <p className="font-semibold">{match.name}</p>
-                    <ChatRoom otherUser={{uid: match.id, name:match.name}} />
-                  </div>
-                  </div>
-                ))}
+                ) : (
+                  <div>You have no matches</div>
+                )}
               </div>
-            </div>
-          ) : (
-            <div>You have no matches</div>
-          )}
-          </div>)}
-        </CardContent>
-      </Card>
-    </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }
