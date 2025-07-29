@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 export default function Navbar() {
   const [username, setUsername] = useState('');
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const currentUser = auth.currentUser;
