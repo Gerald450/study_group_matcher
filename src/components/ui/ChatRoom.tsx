@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
 import {
   collection,
@@ -34,6 +34,11 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth'});
+  }, [messages])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -62,7 +67,6 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
       }));
       setMessages(msgs);
     });
-
     return () => unsubscribe();
   }, [chatId]);
 
@@ -95,6 +99,8 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
             }`}
           >
             {msg.text || <span className="text-red-500 italic">[No message]</span>}
+            {/* dummy div */}
+            <div ref={bottomRef} />
           </div>
         ))}
       </div>
