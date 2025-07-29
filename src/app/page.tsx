@@ -52,6 +52,7 @@ export default function StudyGroupMatcher() {
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
   const [sendMessage, setSendMessage] = useState(false);
+  const [openChatId, setOpenChatId] = useState<string | null>(null);
 
   // authentication
   const [user, setUser] = useState<User | null>(null);
@@ -369,10 +370,10 @@ export default function StudyGroupMatcher() {
                   <div className="mt-8">
                     <h2 className="text-lg font-semibold mb-4">Your Matches</h2>
                     <div className="space-y-4">
-                      {matchedStudents.map((match, idx) => (
+                      {matchedStudents.map((match) => (
                         <div key={match.id}>
                           <div className="flex-col border rounded-md shadow-sm p-4">
-                            <div className="p-4 bg-white  space-y-2 flex justify-between gap-5 relative">
+                            <div className="p-4 bg-white space-y-2 flex justify-between gap-5 relative">
                               <img
                                 className="rounded-md"
                                 src={match.image}
@@ -398,23 +399,32 @@ export default function StudyGroupMatcher() {
                                 </p>
                               </div>
                             </div>
+
                             <div className="flex justify-center">
                               <Button
-                                onClick={() => setSendMessage((prev) => !prev)}
+                                onClick={() =>
+                                  setOpenChatId((prev) =>
+                                    prev === match.id ? null : match.id
+                                  )
+                                }
                               >
                                 Text {match.name}
                               </Button>
                             </div>
-                          </div>
 
-                          {sendMessage && (
-                            <div>
-                              <p className="font-semibold">{match.name}</p>
-                              <ChatRoom
-                                otherUser={{ uid: match.id, name: match.name }}
-                              />
-                            </div>
-                          )}
+                            {/* Render chat only below the clicked match */}
+                            {openChatId === match.id && (
+                              <div className="mt-4">
+                                <p className="font-semibold">{match.name}</p>
+                                <ChatRoom
+                                  otherUser={{
+                                    uid: match.id,
+                                    name: match.name,
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
