@@ -54,7 +54,7 @@ export default function Sidebar() {
             label="Overview & Recent"
             active
           />
-          <SidebarItem icon={<User size={18} />} label="Profile" />
+          <button onClick={() => router.push('/profile')} ><SidebarItem icon={<User size={18} />} label="Profile" /></button>
           <SidebarItem icon={<Search size={18} />} label="Discover" />
           <SidebarItem icon={<MessageCircle size={18} />} label="Chats" />
           <SidebarItem icon={<Users size={18} />} label="Study Groups" />
