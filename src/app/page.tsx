@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { auth, provider, db } from "../lib/firebase";
 import { signInWithPopup, User } from "firebase/auth";
+import DashboardStats from "@/components/dashboard/dashboardStats";
+import ProfileSummary from "@/components/dashboard/profileSummary";
+import RecentActivity from "@/components/dashboard/recentActivity";
+import QuickActions from "@/components/dashboard/quickActions";
 import {
   addDoc,
   collection,
@@ -51,7 +55,6 @@ export default function StudyGroupMatcher() {
   const [students, setStudents] = useState<Student[]>([]);
   const [showStudents, setShowStudents] = useState(false);
   const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
-  const [sendMessage, setSendMessage] = useState(false);
   const [openChatId, setOpenChatId] = useState<string | null>(null);
 
   // authentication
@@ -262,7 +265,27 @@ export default function StudyGroupMatcher() {
   return (
     <>
       {user && <Navbar />}
+
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+       {user && <div className="max-w-6xl mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-4">
+            <h1 className="text-2xl font-bold">Welcome back, {user?.displayName?.split(' ')[0]}</h1>
+            <p className="text-gray-600">Ready to connect with fellow students at your university?</p>
+            <DashboardStats matches={matchStudents.length} chats={0} groups={0} sessions={15} />
+            <ProfileSummary 
+            name={user?.displayName || ""}
+            major="Computer Science"
+            year="junior"
+            about="CS junior passionate about AI and machine learning. Looking for study partners for algorithms and data structures courses."
+            preferences={["Coffee Shops", "Library", "Group Study", "Online Video Calls"]}
+            />
+          </div>
+          <div className="space-y-4">
+            <RecentActivity />
+            <QuickActions/>
+          </div>
+        </div> } 
+
         <Card className="w-full max-w-lg shadow-xl">
           <CardContent className="p-6 space-y-4">
             <h1 className="text-2xl font-bold text-center">
@@ -412,7 +435,7 @@ export default function StudyGroupMatcher() {
                               </Button>
                             </div>
 
-                            {/* Render chat only below the clicked match */}
+                           
                             {openChatId === match.id && (
                               <div className="mt-4">
                                 <p className="font-semibold">{match.name}</p>
