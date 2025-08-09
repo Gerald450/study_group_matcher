@@ -1,7 +1,19 @@
 "use client";
 import { Home, User, Search, MessageCircle, Users, Calendar, LogOut } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase"; // make sure you import auth
 
 export default function Sidebar() {
+  // sign out
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = "./signIn";
+    } catch (err) {
+      console.error("Error signing out: ", err);
+    }
+  };
+
   return (
     <div className="h-screen w-64 bg-white border-r flex flex-col justify-between">
       {/* Top section */}
@@ -44,7 +56,10 @@ export default function Sidebar() {
           <span className="text-sm font-medium text-gray-800">Student</span>
           <span className="text-xs text-gray-500">Ready to study!</span>
         </div>
-        <button className="ml-auto text-gray-400 hover:text-gray-600">
+        <button
+          onClick={handleLogout}
+          className="ml-auto text-gray-400 hover:text-gray-600"
+        >
           <LogOut size={18} />
         </button>
       </div>

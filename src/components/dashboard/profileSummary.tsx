@@ -29,7 +29,7 @@ export default function ProfileSummary({
   });
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg space-y-4 max-w-sm mx-auto">
+    <div className="bg-white p-6 rounded-2xl shadow-lg space-y-4 w-full lg:w-[95%]">
       <h2 className="font-semibold text-xl text-gray-800 border-b pb-2">
         Your Profile Summary
       </h2>

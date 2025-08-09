@@ -9,6 +9,7 @@ import QuickActions from "@/components/dashboard/quickActions";
 import Sidebar from "@/components/dashboard/sidebar";
 import matchStudents from "@/components/matchStudents";
 
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>();
 
@@ -19,6 +20,8 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, []);
 
+ 
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
@@ -26,7 +29,7 @@ export default function Dashboard() {
 
       {/* Main content */}
       <div className="flex-1 p-8">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           {/* Welcome */}
           <div>
             <h1 className="text-2xl font-bold">
@@ -47,7 +50,7 @@ export default function Dashboard() {
 
           {/* Grid layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left / Main column */}
+            {/* Left / Main column - wider */}
             <div className="lg:col-span-2 space-y-6">
               <ProfileSummary
                 name={user?.displayName || ""}
@@ -63,10 +66,14 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Right column */}
-            <div className="space-y-6">
-              <RecentActivity />
-              <QuickActions />
+            {/* Right column - taller cards */}
+            <div className="flex flex-col gap-6">
+              <div className="h-[30vh]">
+                <RecentActivity  />
+              </div>
+              <div className="h-[30vh]">
+                <QuickActions />
+              </div>
             </div>
           </div>
         </div>
