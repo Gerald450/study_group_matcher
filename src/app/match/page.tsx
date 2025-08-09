@@ -27,6 +27,7 @@ import ChatRoom from "@/components/ui/ChatRoom";
 import matchStudents from "@/components/matchStudents";
 import { Student, Match } from "@/components/matchStudents";
 import docDataToStudent from "@/components/docToStudent";
+import { useMatchedStudents } from "@/context/MatchedStudentsContext";
 
 export default function StudyGroupMatcher() {
   const [formData, setFormData] = useState({
@@ -40,7 +41,7 @@ export default function StudyGroupMatcher() {
 
   const [students, setStudents] = useState<Student[]>([]);
   const [showStudents, setShowStudents] = useState(false);
-  const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
+  const {matchedStudents, setMatchedStudents} = useMatchedStudents();
   const [openChatId, setOpenChatId] = useState<string | null>(null);
 
   // authentication
@@ -298,8 +299,6 @@ export default function StudyGroupMatcher() {
                                 Text {match.name}
                               </Button>
                             </div>
-
-                           
                             {openChatId === match.id && (
                               <div className="mt-4">
                                 <p className="font-semibold">{match.name}</p>

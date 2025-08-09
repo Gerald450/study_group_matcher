@@ -3,6 +3,9 @@ import { auth, provider, db } from "../../lib/firebase";
 import { useEffect, useState } from "react";
 import { User } from "firebase/auth";
 import { unsubscribe } from "diagnostics_channel";
+import { useRouter } from "next/navigation";
+import { useMatchedStudents } from "@/context/MatchedStudentsContext";
+
 
 type ProfileSummaryProps = {
   name: string;
@@ -20,6 +23,9 @@ export default function ProfileSummary({
   preferences,
 }: ProfileSummaryProps) {
   const [user, setUser] = useState<User | null>();
+  const router = useRouter()
+  const {matchedStudents} = useMatchedStudents();
+
 
   useEffect(() => {
     const unsubscribe = () => {
@@ -54,7 +60,7 @@ export default function ProfileSummary({
         ))}
       </div>
       <div className="flex gap-3">
-        <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button onClick={() => router.push('/match')} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
           Edit Profile
         </Button>
         <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">

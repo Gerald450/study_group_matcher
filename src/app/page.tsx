@@ -1,17 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
-import { auth } from "../lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import DashboardStats from "@/components/dashboard/dashboardStats";
 import ProfileSummary from "@/components/dashboard/profileSummary";
 import RecentActivity from "@/components/dashboard/recentActivity";
 import QuickActions from "@/components/dashboard/quickActions";
 import Sidebar from "@/components/dashboard/sidebar";
+import { useMatchedStudents } from "@/context/MatchedStudentsContext";
+import docDataToStudent from "@/components/docToStudent";
+import { getDoc, doc } from "firebase/firestore";
+import { auth, provider, db } from "../lib/firebase";
 import matchStudents from "@/components/matchStudents";
 
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>();
+  const {matchedStudents, setMatchedStudents} = useMatchedStudents();
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -19,6 +24,21 @@ export default function Dashboard() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const userRef = doc(db, "students", user.uid);
+          const snapshot = await getDoc(userRef);
+          if (!snapshot.exists()) return;
+          const student = docDataToStudent(snapshot);
+          const matches = await matchStudents(student);
+          setMatchedStudents(matches);
+        }
+      });
+  
+      return () => unsubscribe();
+    }, []);
 
  
 
@@ -42,7 +62,7 @@ export default function Dashboard() {
 
           {/* Stats */}
           <DashboardStats
-            matches={matchStudents.length}
+            matches={matchedStudents.length}
             chats={0}
             groups={0}
             sessions={15}

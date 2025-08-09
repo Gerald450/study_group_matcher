@@ -28,11 +28,12 @@ import matchStudents from "@/components/matchStudents";
 import { Student, Match } from "@/components/matchStudents";
 import docDataToStudent from "@/components/docToStudent";
 import { useRouter } from "next/navigation";
+import { useMatchedStudents } from "@/context/MatchedStudentsContext";
 
 export default function SignIn() {
-  const [matchedStudents, setMatchedStudents] = useState<Match[]>([]);
-  const router = useRouter();
 
+  const {matchedStudents, setMatchedStudents} = useMatchedStudents();
+  const router = useRouter();
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
