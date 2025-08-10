@@ -21,6 +21,7 @@ export type Match = {
     courses: string[];
     times: string[];
     image?: string;
+    about: string
   };
 
  export type Student = {
@@ -31,6 +32,7 @@ export type Match = {
     availability: string;
     studyStyle: string;
     image?: string;
+    about: string;
   };
 
 export default async function matchStudents(newStudent: Student): Promise<Match[]> {
@@ -82,6 +84,7 @@ export default async function matchStudents(newStudent: Student): Promise<Match[
         courses: commonCourses,
         times: commonTimes,
         image: data.image,
+        about: data.about,
       });
     });
     return matches;

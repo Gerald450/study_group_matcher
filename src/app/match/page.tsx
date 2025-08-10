@@ -35,6 +35,7 @@ export default function StudyGroupMatcher() {
     courses: "",
     availability: "",
     studyStyle: "",
+    about: "",
   });
 
  
@@ -64,6 +65,7 @@ export default function StudyGroupMatcher() {
           availability: data.availability || "",
           studyStyle: data.studyStyle || "",
           image: data.image,
+          about: data.about,
         } as Student;
       });
       setStudents(studentList);
@@ -124,6 +126,7 @@ export default function StudyGroupMatcher() {
         courses: "",
         availability: "",
         studyStyle: "",
+        about: "",
       });
     } catch (err) {
       console.error("Error submitting form:", err);
@@ -195,6 +198,13 @@ export default function StudyGroupMatcher() {
                     onChange={handleChange}
                     required
                   />
+                  <Textarea 
+                    name="about"
+                    placeholder="About (Tell us about yourself)"
+                    value={formData.about}
+                    onChange={handleChange}
+                    required
+                  />
                   <Button type="submit" className="w-full">
                     Find My Group
                   </Button>
@@ -245,6 +255,12 @@ export default function StudyGroupMatcher() {
                                     Study Style:
                                   </span>{" "}
                                   {student.studyStyle}
+                                </p>
+                                <p>
+                                  <span className="font-semibold">
+                                    About:
+                                  </span>{" "}
+                                  {student.about}
                                 </p>
                               </div>
                             </div>

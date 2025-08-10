@@ -76,7 +76,7 @@ export default function ProfilePage() {
           height={120}
           className="rounded-full shadow-md"
         />
-        <h1 className="text-2xl font-bold mt-4">{auth.currentUser?.displayName}</h1>
+        <h1 className="text-2xl font-bold mt-4">{user?.displayName}</h1>
         <p className="text-gray-500">{auth.currentUser?.email}</p>
 
         <div className="mt-6 flex gap-3">

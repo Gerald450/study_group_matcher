@@ -54,6 +54,7 @@ export default function SignIn() {
           studyStyle: "",
           email: userData.email,
           image: userData.photoURL,
+          about: "",
         });
       }
 

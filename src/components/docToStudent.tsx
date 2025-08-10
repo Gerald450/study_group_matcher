@@ -17,5 +17,6 @@ export default function docDataToStudent(doc: DocumentSnapshot<DocumentData>): S
           availability: data.availability || "",
           studyStyle: data.studyStyle || "",
           image: data.image || "",
+          about: data.about || "",
         };
       }
