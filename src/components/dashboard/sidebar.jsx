@@ -19,7 +19,7 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      window.location.href = "./signin";
+      router.push('/signIn');
     } catch (err) {
       console.error("Error signing out: ", err);
     }
