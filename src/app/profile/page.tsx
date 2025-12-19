@@ -148,7 +148,7 @@ export default function ProfilePage() {
               {matchedStudents.slice(0, 5).map((match) => (
                 <li key={match.id} className="flex items-center gap-4 py-4">
                   <img
-                    src={match.image || "/default-avatar.png"}
+                    src={match.image || "images/avatar_placeholder.png"}
                     alt={match.name}
                     width={48}
                     height={48}

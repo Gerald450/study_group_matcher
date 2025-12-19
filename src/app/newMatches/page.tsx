@@ -67,7 +67,7 @@ export default function NewMatchesPage() {
             >
               <CardContent className="flex flex-col items-center space-y-4 p-6">
                 <img
-                  src={match.image || "/default-avatar.png"}
+                  src={match.image || ""}
                   alt={match.name}
                   className="w-24 h-24 rounded-full object-cover shadow-md"
                 />
