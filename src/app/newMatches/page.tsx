@@ -36,6 +36,7 @@ export default function NewMatchesPage() {
 
     // on refresh, load matches for current user
     useEffect(() => {
+      if (!auth) return;
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           const userRef = doc(db, "students", user.uid);
@@ -67,7 +68,7 @@ export default function NewMatchesPage() {
             >
               <CardContent className="flex flex-col items-center space-y-4 p-6">
                 <img
-                  src={match.image || "/default-avatar.png"}
+                  src={match.image || "/avatar-default.svg"}
                   alt={match.name}
                   className="w-24 h-24 rounded-full object-cover shadow-md"
                 />

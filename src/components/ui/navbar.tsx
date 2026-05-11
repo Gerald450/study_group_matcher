@@ -10,6 +10,7 @@ export default function Navbar() {
   const [photo, setPhoto] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!auth) return;
     const currentUser = auth.currentUser;
     if (currentUser) {
       setUsername(currentUser.displayName || '');
@@ -19,6 +20,7 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     try {
+      if (!auth) return;
       await signOut(auth);
       alert('You are signed out!');
     } catch (err) {

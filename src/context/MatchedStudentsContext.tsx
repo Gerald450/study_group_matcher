@@ -1,6 +1,6 @@
 'use client'
 import React, { createContext, useState, useContext, ReactNode } from "react";
-import { Match } from "@/components/matchStudents";
+import type { Match } from "@/components/matchStudents";
 
 interface MatchedStudentsContextType {
   matchedStudents: Match[];

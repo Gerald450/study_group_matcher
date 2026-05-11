@@ -1,6 +1,5 @@
 import { DocumentData, DocumentSnapshot } from "firebase/firestore";
-import matchStudents from "@/components/matchStudents";
-import { Student, Match } from "@/components/matchStudents";
+import type { Student } from "@/components/matchStudents";
 
 
 

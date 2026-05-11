@@ -83,6 +83,11 @@ export default function StudyGroupMatcher() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    if (!auth) {
+      alert("Please sign in first");
+      return;
+    }
+
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
@@ -134,6 +139,7 @@ export default function StudyGroupMatcher() {
 
   // listen for auth changes and update user
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
@@ -142,6 +148,7 @@ export default function StudyGroupMatcher() {
 
   // on refresh, load matches for current user
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userRef = doc(db, "students", user.uid);
