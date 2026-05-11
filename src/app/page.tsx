@@ -19,6 +19,7 @@ export default function Dashboard() {
 
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
@@ -26,6 +27,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+      if (!auth) return;
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           const userRef = doc(db, "students", user.uid);

@@ -36,6 +36,7 @@ export default function SignIn() {
   const router = useRouter();
   const handleGoogleSignIn = async () => {
     try {
+      if (!auth || !provider) return;
       const result = await signInWithPopup(auth, provider);
 
       const userData = result.user;

@@ -2,7 +2,6 @@ import { Button } from "../ui/button";
 import { auth, provider, db } from "../../lib/firebase";
 import { useEffect, useState } from "react";
 import { User } from "firebase/auth";
-import { unsubscribe } from "diagnostics_channel";
 import { useRouter } from "next/navigation";
 import { useMatchedStudents } from "@/context/MatchedStudentsContext";
 
@@ -28,8 +27,10 @@ export default function ProfileSummary({
 
 
   useEffect(() => {
+    if (!auth) return;
+    const firebaseAuth = auth;
     const unsubscribe = () => {
-      setUser(auth.currentUser);
+      setUser(firebaseAuth.currentUser);
     };
     return () => unsubscribe();
   });

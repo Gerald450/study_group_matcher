@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect } from "react";
-import { auth, provider, db } from "../lib/firebase";
+import { db } from "../lib/firebase";
 
 import {
   addDoc,
@@ -40,7 +40,6 @@ export default async function matchStudents(newStudent: Student): Promise<Match[
     const snapshot = await getDocs(studentsRef);
 
     const matches: Match[] = [];
-    console.log('Type:', typeof newStudent.courses)
 
     const newCourses = newStudent.courses
       .split(",")

@@ -18,6 +18,7 @@ export default function Sidebar() {
   // sign out
   const handleLogout = async () => {
     try {
+      if (!auth) return;
       await signOut(auth);
       router.push('/signIn');
     } catch (err) {

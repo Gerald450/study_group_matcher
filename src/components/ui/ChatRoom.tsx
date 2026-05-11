@@ -41,6 +41,7 @@ export default function ChatRoom({ otherUser }: ChatRoomProps) {
   }, [messages])
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
     });

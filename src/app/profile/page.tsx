@@ -39,6 +39,7 @@ export default function ProfilePage() {
 
     // on refresh, load matches for current user
     useEffect(() => {
+      if (!auth) return;
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         if (user) {
           const userRef = doc(db, "students", user.uid);
@@ -54,6 +55,7 @@ export default function ProfilePage() {
     }, []);
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user);
     })
@@ -61,8 +63,9 @@ export default function ProfilePage() {
   })
 
   const handleLogout = async () => {
+    if (!auth) return;
     await auth.signOut();
-    router.push("/signin");
+    router.push("/signIn");
   };
 
   return (
@@ -76,8 +79,8 @@ export default function ProfilePage() {
           height={120}
           className="rounded-full shadow-md"
         />
-        <h1 className="text-2xl font-bold mt-4">{auth.currentUser?.displayName}</h1>
-        <p className="text-gray-500">{auth.currentUser?.email}</p>
+        <h1 className="text-2xl font-bold mt-4">{user?.displayName}</h1>
+        <p className="text-gray-500">{user?.email}</p>
 
         <div className="mt-6 flex gap-3">
           <Button onClick={() => router.push("/edit-profile")} className="bg-blue-600 hover:bg-blue-700">
